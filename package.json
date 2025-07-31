@@ -1,0 +1,21 @@
+{
+  "name": "js_bible_app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "bin": {
+    "bible": "./server.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.11.0",
+    "blessed": "^0.1.81",
+    "wrap-ansi": "^9.0.0"
+  }
+}
