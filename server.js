@@ -8,15 +8,6 @@ const fs = require('fs');
 const path = require('path');
 
 // Constants
-const allowedColors = [
-  'black', 'red', 'green', 'yellow',
-  'blue', 'magenta', 'cyan', 'white',
-  'gray', 'grey', 'purple', 'orange'
-];
-const colorAliases = {
-  purple: 'magenta',
-  orange: 'yellow', // fallback for orange
-};
 
 const FAVORITES_PATH = path.resolve(process.env.HOME || process.env.USERPROFILE || __dirname, '.verse_favorites.json');
 
@@ -32,12 +23,19 @@ function formatHelpLine(command, desc, totalWidth = 50) {
 
 // Homepage and help instructions
 const helpLines = [
-  formatHelpLine('john 3:16', 'Search a passage'),
-  formatHelpLine('save', 'Favorite the last searched verse'),
-  formatHelpLine('favs', 'Show saved favorites'),
-  formatHelpLine('delete john 3:16', 'Remove verse from favs'),
-  formatHelpLine('q', 'Quit the app'),
-  formatHelpLine('help', 'Show these instructions')
+  formatHelpLine('search a passage', '1 thes 1:2-5'),
+  formatHelpLine('', ''),
+  formatHelpLine('scroll through text', 'escape, then j/k'),
+  formatHelpLine('insert mode', 'i'),
+  formatHelpLine('', ''),
+  formatHelpLine('favorite the last searched verse', 'save'),
+  formatHelpLine('show saved favorites', 'favs'),
+  formatHelpLine('remove verse from favs', 'delete john 3:16'),
+  formatHelpLine('', ''),
+  formatHelpLine('show verse locations', 'refs'),
+  formatHelpLine('', ''),
+  formatHelpLine('quit the app', 'q'),
+  formatHelpLine('show these instructions', 'help')
 ];
 
 const homepageText = `{center}{green-fg}{bold}
@@ -133,7 +131,7 @@ function displayFavorites() {
 
   let content = '{bold}Favorite Verses:{/bold}\n\n';
   favs.forEach((v, i) => {
-    content += `{bold}${i + 1}. ${v.reference} {bold}\n{bold}${v.text.trim()}{/bold}\n\n`;
+    content += `{bold}${i + 1}. ${v.reference} {/bold}\n{bold}${v.text.trim()}{/bold}\n\n`;
   });
 
   verseBox.setContent(content);
@@ -158,19 +156,14 @@ async function fetchVerse(query) {
 
     const verses = data.verses
       ? data.verses.map(v => {
-          const ref = `{red-fg}${v.book_name} ${v.chapter}:${v.verse}{/red-fg}\n`;
+          const ref = `{gray-fg}${v.book_name} ${v.chapter}:${v.verse}{/gray-fg}\n`;
           const wrappedText = wrapAndIndent(v.text.trim(), maxWidth);
           return showReferences ? ref + wrappedText : wrappedText;
         }).join('\n')
       : wrapAndIndent(data.text.trim(), maxWidth);
 
-
-verseBox.setContent(`{center}{bold}${data.reference}{/bold}{/center}\n\n{center}{bold}${verses}{/bold}{/center}`);
+    verseBox.setContent(`{center}{bold}{white-fg}${data.reference}{/white-fg}{/center}\n\n{center}{white-fg}${verses}{/white-fg}{/bold}{/center}`);
         // When pressing `Esc`, blur the input and enable scrolling
-        input.key('escape', () => {
-          screen.focusPop(); // unfocus the input
-          verseBox.focus();  // focus the verseBox
-        });
 
         // Allow going back to input by pressing `i`
         verseBox.key('i', () => {
@@ -195,7 +188,7 @@ verseBox.setContent(`{center}{bold}${data.reference}{/bold}{/center}\n\n{center}
 
     screen.render();
   } catch (err) {
-    verseBox.setContent(`{red-fg}❌ Error:{/red-fg} ${err.response?.data?.error || err.message}`);
+    verseBox.setContent(`{red-fg}Error:{/red-fg} ${err.response?.data?.error || err.message}`);
     screen.render();
   }
 }
@@ -210,19 +203,14 @@ input.on('submit', async (value) => {
     input.focus();
     return;
   }
-if (allowedColors.includes(query) || colorAliases[query]) {
-  const resolvedColor = colorAliases[query] || query;
-  verseBox.style.fg = resolvedColor;
-  verseBox.style.border.fg = resolvedColor;
-  verseBox.setContent(`{${resolvedColor}-fg}✅ Color changed to ${query}{/${resolvedColor}-fg}`);
-  screen.render();
-  input.focus();
-  return;
-} else  if (query === 'favs') {
+
+  // Commands
+  if (query === 'favs') {
     displayFavorites();
+ 
 } else if (query === 'refs') {
   showReferences = !showReferences;
-  verseBox.setContent(`{bold}Verse references ${showReferences ? 'enabled' : 'hidden'}.{\/bold}`);
+  verseBox.setContent(`{bold}Verse references ${showReferences ? 'enabled' : 'hidden'}.{/bold}`);
   screen.render();
 
     } else if (query === 'help') {
@@ -267,6 +255,10 @@ screen.key(['q', 'C-c', 'escape'], () => {
   process.exit(0);
 });
 
+        input.key('escape', () => {
+          screen.focusPop(); // unfocus the input
+          verseBox.focus();  // focus the verseBox
+        });
 screen.render();
 })();
 
